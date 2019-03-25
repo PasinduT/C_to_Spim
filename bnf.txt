@@ -1,0 +1,4 @@
+<program> := <function>
+<function> := "int" <identifier> "("")" "{" <statement> "}"
+<statement> := <return_stmt> ";"
+<return_statement> := "return" <int_val>

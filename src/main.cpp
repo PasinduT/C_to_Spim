@@ -4,6 +4,7 @@
 #include "includes/CLI11.hpp"
 #include "includes/parser.hpp"
 #include "includes/lex.hpp"
+#include "includes/code_gen.hpp"
 using namespace std;
 
 int main(int argc, char * argv[])
@@ -22,7 +23,8 @@ int main(int argc, char * argv[])
     }
     vector<Token> tokens;
     lex(input, tokens);
-    parse(tokens); 
-
+    size_t p = 0;
+    Program * program = parse(tokens, p); 
+    gen_code(program, cout);
     return 0;
 }
