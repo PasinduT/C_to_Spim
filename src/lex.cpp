@@ -94,6 +94,9 @@ void lex(ifstream & input, vector<Token> & tokens)
 
                 case ')':  token.token_type = TOK_R_PARAN;
                             break;
+
+                case '=':  token.token_type = TOK_EQUAL;
+                            break;
             }
             tokens.push_back(token);
             input.get(c);

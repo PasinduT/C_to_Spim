@@ -98,6 +98,35 @@ Declare_Statement * parse_declare_statement(vector<Token> & tokens, size_t & p)
     return result;
 }
 
+Assignment_Statement * parse_assignment_statement(vector<Token> & tokens, size_t & p)
+{
+    string identifier;
+    if (tokens[p].token_type != TOK_IDENTIFIER)
+    {
+        throw_error(0, p);
+    }
+    identifier = tokens[p].str_val;
+
+    inc_pointer(tokens, p);
+    if (tokens[p].token_type != TOK_EQUAL)
+    {
+        throw_error(0, p);
+    }
+
+    inc_pointer(tokens, p);
+    int int_val;
+    if (tokens[p].token_type != TOK_INT)
+    {
+        throw_error(0, p);
+    }
+    int_val = tokens[p].int_val;
+
+    Assignment_Statement * result = new Assignment_Statement;
+    result->identifier = identifier;
+    result->int_val = int_val;
+    return result;
+}
+
 Statement * parse_statement(vector<Token> & tokens, size_t & p)
 {
     Statement * result = new Statement;
@@ -116,11 +145,19 @@ Statement * parse_statement(vector<Token> & tokens, size_t & p)
         result->dstmt = parse_declare_statement(tokens, p);
         result->type = DECLARE;
     }
+    else if (tokens[p].token_type == TOK_IDENTIFIER)
+    {
+        if ((p < tokens.size() - 1) && (tokens[p+1].token_type == TOK_EQUAL))
+        {
+            result->astmt = parse_assignment_statement(tokens, p);
+            result->type = ASSIGNMENT;
+        }
+    }
 
     inc_pointer(tokens, p);
     if (tokens[p].token_type != TOK_SEMICOLON)
     {
-        throw_error(0, p);
+        throw_error(5, p);
     }
     return result;
 }

@@ -39,7 +39,6 @@ void gen_stmt_code(Statement * stmt, sstream & out, sstream & data)
         gen_stmt_code(stmt->first, out, data);
         gen_stmt_code(stmt->second, out, data);
     }
-
     else if (stmt->type == DECLARE)
     {
         if (symbol_table.find(stmt->dstmt->identifier) != symbol_table.end())
@@ -54,8 +53,32 @@ void gen_stmt_code(Statement * stmt, sstream & out, sstream & data)
         }
         else 
         {
-            gen_data(data, stmt->dstmt->identifier, 0);
+            string identifier = stmt->dstmt->identifier;
+            gen_data(data, identifier, 0);
+            symbol_table[stmt->dstmt->identifier] = make_pair(0, 
+                        identifier);
         }
+    }
+    else if (stmt->type == ASSIGNMENT)
+    {
+        if (symbol_table.find(stmt->astmt->identifier) == symbol_table.end())
+        {
+            size_t some = 0;
+            throw_error(3, some);
+        }
+        string location = symbol_table[stmt->astmt->identifier].second;
+        if (location.at(0) == '$')
+        {
+            out << "\t\tli "<< location << ", " << stmt->astmt->int_val << endl;
+            out << endl;
+        }
+        else 
+        {
+            out << "\t\tla $t0, " << location << endl;
+            out << "\t\tli $t1, " << stmt->astmt->int_val << endl;
+            out << "\t\tsw $t1, 0($t0)" << endl << endl;
+        }
+        
     }
 }
 void gen_code(Program * program, sstream & code, sstream & data)

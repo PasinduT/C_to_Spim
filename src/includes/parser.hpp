@@ -9,12 +9,20 @@ enum Statement_Type
     PRINTF,
     EMPTY,
     MULTI,
-    DECLARE
+    DECLARE,
+    ASSIGNMENT
 };
 
 class Return_Statement 
 {
 public:
+    int int_val;
+};
+
+class Assignment_Statement 
+{
+public:
+    string identifier;
     int int_val;
 };
 
@@ -37,6 +45,7 @@ public:
     Return_Statement * rstmt;
     Printf_Statement * pstmt;
     Declare_Statement * dstmt;
+    Assignment_Statement * astmt;
     Statement * first;
     Statement * second;
 
@@ -75,3 +84,5 @@ Return_Statement * parse_return_statement(vector<Token> & tokens, size_t & p);
 Printf_Statement * parse_printf_statement(vector<Token> & tokens, size_t & p);
 
 Declare_Statement * parse_declare_statement(vector<Token> & tokens, size_t & p);
+
+Assignment_Statement * parse_assignment_statement(vector<Token> & tokens, size_t & p);
