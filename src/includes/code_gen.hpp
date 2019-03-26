@@ -2,4 +2,4 @@
 #include "parser.hpp"
 using namespace std;
 
-void gen_code(Program * program, ostream & out);
+void gen_output(Program * program, ostream & out);

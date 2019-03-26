@@ -25,6 +25,6 @@ int main(int argc, char * argv[])
     lex(input, tokens);
     size_t p = 0;
     Program * program = parse(tokens, p); 
-    gen_code(program, cout);
+    gen_output(program, cout);
     return 0;
 }

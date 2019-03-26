@@ -3,17 +3,36 @@
 #include <vector>
 #include "token.hpp"
 
+enum Statement_Type
+{
+    RETURN,
+    PRINTF,
+    EMPTY
+};
+
 class Return_Statement 
 {
 public:
     int int_val;
 };
 
+class Printf_Statement 
+{
+public:
+    string str_val;
+};
+
 class Statement
 {
 public:
-    int type;
+    Statement_Type type;
     Return_Statement * rstmt;
+    Printf_Statement * pstmt;
+
+    Statement()
+    {
+        type = EMPTY;
+    }
 };
 
 class Function 
@@ -43,3 +62,5 @@ Function * parse_function(vector<Token> & tokens, size_t & p);
 Statement * parse_statement(vector<Token> & tokens, size_t & p);
 
 Return_Statement * parse_return_statement(vector<Token> & tokens, size_t & p);
+
+Printf_Statement * parse_printf_statement(vector<Token> & tokens, size_t & p);
