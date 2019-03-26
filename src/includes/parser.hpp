@@ -7,7 +7,9 @@ enum Statement_Type
 {
     RETURN,
     PRINTF,
-    EMPTY
+    EMPTY,
+    MULTI,
+    DECLARE
 };
 
 class Return_Statement 
@@ -22,12 +24,21 @@ public:
     string str_val;
 };
 
+class Declare_Statement 
+{
+public:
+    string identifier;
+};
+
 class Statement
 {
 public:
     Statement_Type type;
     Return_Statement * rstmt;
     Printf_Statement * pstmt;
+    Declare_Statement * dstmt;
+    Statement * first;
+    Statement * second;
 
     Statement()
     {
@@ -48,8 +59,6 @@ public:
     Function * func;
 };
 
-
-
 /**
  * Parses an entire program
  * @param tokens The list of tokens
@@ -64,3 +73,5 @@ Statement * parse_statement(vector<Token> & tokens, size_t & p);
 Return_Statement * parse_return_statement(vector<Token> & tokens, size_t & p);
 
 Printf_Statement * parse_printf_statement(vector<Token> & tokens, size_t & p);
+
+Declare_Statement * parse_declare_statement(vector<Token> & tokens, size_t & p);

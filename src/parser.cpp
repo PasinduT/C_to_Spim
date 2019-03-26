@@ -78,9 +78,28 @@ Printf_Statement * parse_printf_statement(vector<Token> & tokens, size_t & p)
     return result;
 }
 
+Declare_Statement * parse_declare_statement(vector<Token> & tokens, size_t & p)
+{
+    if (tokens[p].token_type != TOK_INT_TYPE)
+    {
+        throw_error(0, p);
+    }
+
+    inc_pointer(tokens, p);
+    string identifier;
+    if (tokens[p].token_type != TOK_IDENTIFIER)
+    {
+        throw_error(0, p);
+    }
+    identifier = tokens[p].str_val;
+
+    Declare_Statement * result = new Declare_Statement;
+    result->identifier = identifier;
+    return result;
+}
+
 Statement * parse_statement(vector<Token> & tokens, size_t & p)
 {
-
     Statement * result = new Statement;
     if (tokens[p].token_type == TOK_RETURN)
     {
@@ -92,11 +111,45 @@ Statement * parse_statement(vector<Token> & tokens, size_t & p)
         result->pstmt = parse_printf_statement(tokens, p);
         result->type = PRINTF;
     }
+    else if (tokens[p].token_type == TOK_INT_TYPE)
+    {
+        result->dstmt = parse_declare_statement(tokens, p);
+        result->type = DECLARE;
+    }
 
     inc_pointer(tokens, p);
     if (tokens[p].token_type != TOK_SEMICOLON)
     {
         throw_error(0, p);
+    }
+    return result;
+}
+
+Statement * parse_multi_statemnt(vector<Token> & tokens, size_t & p)
+{
+    Statement * first = parse_statement(tokens, p);
+    inc_pointer(tokens, p);
+    if (tokens[p].token_type == TOK_R_BRACE)
+    {
+        return first;
+    }
+    Statement * result = new Statement;
+    result->type = MULTI;
+    result->first = first;
+    result->second = parse_statement(tokens, p);
+
+    Statement * current = result;
+    
+    inc_pointer(tokens, p);
+    while (tokens[p].token_type != TOK_R_BRACE)
+    {
+        Statement * temp = new Statement;
+        temp->type = MULTI;
+        temp->first = current->second;
+        temp->second = parse_statement(tokens, p);
+        current->second = temp;
+        current = temp;
+        inc_pointer(tokens, p);
     }
     return result;
 }
@@ -136,13 +189,7 @@ Function * parse_function(vector<Token> & tokens, size_t & p)
     }
 
     inc_pointer(tokens, p);
-    Statement * stmt = parse_statement(tokens, p);
-
-    inc_pointer(tokens, p);
-    if (tokens[p].token_type != TOK_R_BRACE)
-    {
-        throw_error(0, p);
-    }
+    Statement * stmt = parse_multi_statemnt(tokens, p);
 
     Function * result = new Function;
     (*result).stmt = stmt;

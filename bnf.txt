@@ -1,4 +1,12 @@
 <program> := <function>
 <function> := "int" <identifier> "("")" "{" <statement> "}"
-<statement> := <return_stmt> ";"
+<statement> :=  <return_stmt>  ";" | 
+                <printf_stmt>  ";" | 
+                <declare_stmt>  ";" | 
+                <assignment_stmt> ";" |
+                <statement> ";" <statement> |
+
 <return_statement> := "return" <int_val>
+<assignment_statement> := <identifier> = <int_val>
+<printf_stmt> := "printf" "("<string>")" 
+<declare_stmt> := "int" <identifier> 
