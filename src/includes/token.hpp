@@ -21,7 +21,9 @@ enum TOKENS
     TOK_L_ANGLE,
     TOK_R_ANGLE,
     TOK_DOT,
-    TOK_EQUAL
+    TOK_EQUAL,
+    TOK_L_BRACKET, 
+    TOK_R_BRACKET
 };
 
 const string TOKEN_STRINGS[] =
@@ -41,7 +43,9 @@ const string TOKEN_STRINGS[] =
     "TOK_L_ANGLE",
     "TOK_R_ANGLE",
     "TOK_DOT",
-    "TOK_EQUAL"
+    "TOK_EQUAL",
+    "TOK_L_BRACKET", 
+    "TOK_R_BRACKET"
 };
 
 

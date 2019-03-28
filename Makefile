@@ -8,8 +8,8 @@ CFLAGS=-std=c++11
 
 all: cspim
 
-test: cspim
-	./cspim -i test/test1.c
+test%: cspim
+	./cspim -i test/$@.c
 
 .cpp.o:
 	$(CPP) $(CFLAGS) -c -o $@ $<

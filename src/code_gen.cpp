@@ -14,6 +14,8 @@ void gen_stmt_code(Statement * stmt, sstream & out, sstream & data);
 void gen_code(Program * program, sstream & code, sstream & data);
 void gen_data(sstream & out, string name, string & data);
 void gen_data(sstream & out, string name, int data);
+string set_var_location(sstream & out, string name, string target);
+void gen_data_array(sstream & out, string name, int n);
 void gen_output(Program * program, ostream & out);
 
 void gen_stmt_code(Statement * stmt, sstream & out, sstream & data)
@@ -46,18 +48,38 @@ void gen_stmt_code(Statement * stmt, sstream & out, sstream & data)
             size_t some = 0;
             throw_error(2, some);
         }
-        if (s_registers <= 7)
-        {
-            symbol_table[stmt->dstmt->identifier] = make_pair(0, 
-                        "$s" + to_string(s_registers++));
-        }
-        else 
-        {
-            string identifier = stmt->dstmt->identifier;
-            gen_data(data, identifier, 0);
-            symbol_table[stmt->dstmt->identifier] = make_pair(0, 
-                        identifier);
-        }
+		if (stmt->dstmt->is_array == false)
+		{
+			if (s_registers <= 7)
+			{
+				symbol_table[stmt->dstmt->identifier] = make_pair(0, 
+							"$s" + to_string(s_registers++));
+			}
+			else 
+			{
+				string identifier = stmt->dstmt->identifier;
+				gen_data(data, identifier, 0);
+				symbol_table[stmt->dstmt->identifier] = make_pair(0, 
+							identifier);
+			}
+	 	}
+		else
+		{
+			gen_data_array(data, stmt->dstmt->identifier, stmt->dstmt->int_val);
+			if (s_registers <= 7)
+			{
+				out << "\t\tla $s" << s_registers << ", " << 
+					stmt->dstmt->identifier << endl << endl;
+				symbol_table[stmt->dstmt->identifier] = make_pair(1, 
+							"$s" + to_string(s_registers++));
+			}
+			else 
+			{
+				symbol_table[stmt->dstmt->identifier] = make_pair(1, 
+							stmt->dstmt->identifier);
+			}
+		}
+		
     }
     else if (stmt->type == ASSIGNMENT)
     {
@@ -67,20 +89,85 @@ void gen_stmt_code(Statement * stmt, sstream & out, sstream & data)
             throw_error(3, some);
         }
         string location = symbol_table[stmt->astmt->identifier].second;
-        if (location.at(0) == '$')
-        {
-            out << "\t\tli "<< location << ", " << stmt->astmt->int_val << endl;
-            out << endl;
-        }
-        else 
-        {
-            out << "\t\tla $t0, " << location << endl;
-            out << "\t\tli $t1, " << stmt->astmt->int_val << endl;
-            out << "\t\tsw $t1, 0($t0)" << endl << endl;
-        }
+		if (stmt->astmt->is_array == false)
+		{
+			if (location.at(0) == '$')
+			{
+				out << "\t\tli "<< location << ", " << stmt->astmt->int_val << endl;
+				out << endl;
+			}
+			else 
+			{
+				out << "\t\tla $t0, " << location << endl;
+				out << "\t\tli $t1, " << stmt->astmt->int_val << endl;
+				out << "\t\tsw $t1, 0($t0)" << endl << endl;
+			}
+		}
+		else
+		{
+			if (location.at(0) == '$')
+			{
+				out << "\t\tli $t1, " << stmt->astmt->int_val << endl;
+				if (stmt->astmt->array_index != -1)
+				{
+					out << "\t\tsw $t1, " << stmt->astmt->array_index << "(" 
+					<< location << ")" << endl << endl;
+				}
+				else
+				{
+					string var = set_var_location(out, 
+						stmt->astmt->array_index_identifier, "$t2");
+					out << "\t\tsll $t2, " <<  var << ", 2" << endl;
+					out << "\t\tadd $t0, " << location << ", $t2" << endl;
+					out << "\t\tsw $t1, 0($t0)" << endl << endl;
+				}
+				
+			}
+			else 
+			{
+				if (stmt->astmt->array_index != -1)
+				{
+					out << "\t\tla $t0, " << location << endl;
+					out << "\t\tli $t1, " << stmt->astmt->int_val << endl;
+					out << "\t\tsw $t1, " << (stmt->astmt->array_index * 4)
+						<< "($t0)" << endl << endl;
+				}
+				else
+				{
+					string var = set_var_location(out, 
+					stmt->astmt->array_index_identifier, "$t2");
+					out << "\t\tla $t0, " << location << endl;
+					out << "\t\tsll $t1, " <<  var << ", 2" << endl;
+					out << "\t\tadd $t0, $t0, $t1" << endl;
+					out << "\t\tli $t1, " << stmt->astmt->int_val << endl;
+					out << "\t\tsw $t1, " 
+						<< "0($t0)" << endl << endl;
+				}
+				
+			}
+		}
+		
         
     }
 }
+
+string set_var_location(sstream & out, string name, string target)
+{
+	if (symbol_table.find(name) == symbol_table.end())
+	{
+		size_t some = 0;
+		throw_error(7, some);
+	}
+	name = symbol_table[name].second;
+	if (name.at(0) != '$')
+	{
+		out << "\t\tla $t0, " << name << endl;
+		out << "\t\tlw " << target << ", 0($t0)" << endl;
+		return target;
+	}
+	return name;
+}
+
 void gen_code(Program * program, sstream & code, sstream & data)
 {
     code << program->func->identifier << ":" << endl;
@@ -96,6 +183,12 @@ void gen_data(sstream & out, string name, string & data)
 void gen_data(sstream & out, string name, int data)
 {
    out << name << ":\t.word " << data  << endl;
+}
+
+void gen_data_array(sstream & out, string name, int n)
+{
+	out << "\t\t.align 2" << endl; 
+   out << name << ":\t.space " << n << endl;
 }
 
 void gen_output(Program * program, ostream & out)

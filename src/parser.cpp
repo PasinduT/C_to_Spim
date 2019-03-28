@@ -5,9 +5,10 @@
 
 Program * parse(vector<Token> & tokens, size_t & p)
 {
-    for (auto t : tokens)
+    for (int i = 0; i < tokens.size(); i++)
     {
-        t.print();
+        cout << i << " - ";
+        tokens[i].print();
     }
 
     Function * func = parse_function(tokens, p);
@@ -95,11 +96,33 @@ Declare_Statement * parse_declare_statement(vector<Token> & tokens, size_t & p)
 
     Declare_Statement * result = new Declare_Statement;
     result->identifier = identifier;
+    if ((p < tokens.size() - 1) && (tokens[p+1].token_type == TOK_L_BRACKET))
+    {
+        result->is_array = true;
+        inc_pointer(tokens, p);
+        inc_pointer(tokens, p);
+
+        int int_val;
+        if (tokens[p].token_type != TOK_INT)
+        {
+            throw_error(0, p);
+        }
+        int_val = tokens[p].int_val;
+        inc_pointer(tokens, p);
+        if (tokens[p].token_type != TOK_R_BRACKET)
+        {
+            throw_error(0, p);
+        }
+
+        result->int_val = int_val;
+    }
+
     return result;
 }
 
 Assignment_Statement * parse_assignment_statement(vector<Token> & tokens, size_t & p)
 {
+    Assignment_Statement * result = new Assignment_Statement;
     string identifier;
     if (tokens[p].token_type != TOK_IDENTIFIER)
     {
@@ -108,6 +131,32 @@ Assignment_Statement * parse_assignment_statement(vector<Token> & tokens, size_t
     identifier = tokens[p].str_val;
 
     inc_pointer(tokens, p);
+    if (tokens[p].token_type == TOK_L_BRACKET)
+    {
+        inc_pointer(tokens, p);
+        if (tokens[p].token_type == TOK_INT)
+        {
+            result->array_index = tokens[p].int_val;
+            result->is_array = true;
+        }
+        else if (tokens[p].token_type == TOK_IDENTIFIER)
+        {
+            result->array_index = -1;
+            result->is_array = true;
+            result->array_index_identifier = tokens[p].str_val;
+        }
+        else 
+        {
+            throw_error(0, p);
+        }
+        
+        inc_pointer(tokens, p);
+        if (tokens[p].token_type != TOK_R_BRACKET)
+        {
+            throw_error(0, p);
+        }
+        inc_pointer(tokens, p);
+    }
     if (tokens[p].token_type != TOK_EQUAL)
     {
         throw_error(0, p);
@@ -121,7 +170,6 @@ Assignment_Statement * parse_assignment_statement(vector<Token> & tokens, size_t
     }
     int_val = tokens[p].int_val;
 
-    Assignment_Statement * result = new Assignment_Statement;
     result->identifier = identifier;
     result->int_val = int_val;
     return result;
@@ -147,7 +195,8 @@ Statement * parse_statement(vector<Token> & tokens, size_t & p)
     }
     else if (tokens[p].token_type == TOK_IDENTIFIER)
     {
-        if ((p < tokens.size() - 1) && (tokens[p+1].token_type == TOK_EQUAL))
+        if ((p < tokens.size() - 1) && ((tokens[p+1].token_type == TOK_EQUAL)
+                || (tokens[p+1].token_type == TOK_L_BRACKET)))
         {
             result->astmt = parse_assignment_statement(tokens, p);
             result->type = ASSIGNMENT;

@@ -23,7 +23,12 @@ class Assignment_Statement
 {
 public:
     string identifier;
+    int array_index;
+    string array_index_identifier;
+    bool is_array;
     int int_val;
+
+    Assignment_Statement() {is_array = false;}
 };
 
 class Printf_Statement 
@@ -36,6 +41,10 @@ class Declare_Statement
 {
 public:
     string identifier;
+    bool is_array;
+    int int_val;
+
+    Declare_Statement() { is_array = false; }
 };
 
 class Statement

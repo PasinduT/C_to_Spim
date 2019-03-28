@@ -89,6 +89,12 @@ void lex(ifstream & input, vector<Token> & tokens)
                 case '}':  token.token_type = TOK_R_BRACE;
                             break;
 
+                case '[':  token.token_type = TOK_L_BRACKET;
+                            break;
+
+                case ']':  token.token_type = TOK_R_BRACKET;
+                            break;
+
                 case '(':  token.token_type = TOK_L_PARAN;
                             break;
 
