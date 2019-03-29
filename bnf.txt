@@ -9,6 +9,7 @@
 <return_statement> := "return" <int_val>
 <assignment_statement> :=  <l_value> "=" <r_value> 
 <printf_stmt> := "printf" "("<string>")" 
+<if_statement> :=  "if" "(" <condition> ")" "{" <statement> "}"
 <declare_stmt> :=   "int" <identifier> |
                     "int" <identifier> "[" <int_val> "]"
 <l_value> :=    <identifier> |
@@ -18,4 +19,6 @@
                 <indentifier> |
                 <indentifier> "[" <r_value> "]"
 
-<if_statement> :=   <
+<condition> :=  <r_value> <logical_operator> <r_value>
+<logical_operator> := "<" | ">" | "=="
+

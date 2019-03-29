@@ -10,7 +10,8 @@ enum Statement_Type
     EMPTY,
     MULTI,
     DECLARE,
-    ASSIGNMENT
+    ASSIGNMENT,
+    IF
 };
 
 enum R_Value_Type
@@ -18,6 +19,13 @@ enum R_Value_Type
     INT_VAL,
     IDENTIFIER,
     ARRAY_IDENTIFIER
+};
+
+enum Logical_Operator_Type
+{
+    LESS,
+    GREATER,
+    EQUAL
 };
 
 class R_Value
@@ -41,6 +49,14 @@ public:
     }
 
     virtual ~Statement() {}
+};
+
+class Condition 
+{
+public:
+    R_Value * first;
+    R_Value * second;
+    Logical_Operator_Type type;
 };
 
 class Return_Statement : public Statement
@@ -76,6 +92,12 @@ public:
     Declare_Statement() { is_array = false; }
 };
 
+class If_Statement : public Statement
+{
+public:
+    Condition * condition;
+    Statement * body;
+};
 
 
 class Function 
@@ -102,7 +124,11 @@ R_Value * parse_r_value(vector<Token> & tokens, size_t & p);
 
 Function * parse_function(vector<Token> & tokens, size_t & p);
 
+Condition * parse_condition(vector<Token> & tokens, size_t & p);
+
 Statement * parse_statement(vector<Token> & tokens, size_t & p);
+
+If_Statement * parse_if_statement(vector<Token> & tokens, size_t & p);
 
 Return_Statement * parse_return_statement(vector<Token> & tokens, size_t & p);
 

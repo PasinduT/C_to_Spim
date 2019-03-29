@@ -48,6 +48,34 @@ Return_Statement * parse_return_statement(vector<Token> & tokens, size_t & p)
     return result;
 }
 
+Condition * parse_condition(vector<Token> & tokens, size_t & p)
+{
+    Condition * result = new Condition;
+    result->first = parse_r_value(tokens, p);
+
+    inc_pointer(tokens, p);
+    if (tokens[p].token_type == TOK_L_ANGLE)
+    {
+        result->type = LESS;
+    }
+    else if (tokens[p].token_type == TOK_R_ANGLE)
+    {
+        result->type = GREATER;
+    }
+    else if (tokens[p].token_type == EQUAL && ((p < (tokens.size() - 1)) && tokens[p+1].token_type == EQUAL))
+    {
+        inc_pointer(tokens, p);
+        result->type = EQUAL;
+    }
+    else
+    {
+        throw_error(0, p);
+    }
+    inc_pointer(tokens, p);
+
+    result->second = parse_r_value(tokens, p);
+}
+
 R_Value * parse_r_value(vector<Token> & tokens, size_t & p)
 {
     R_Value * result = new R_Value;
@@ -80,6 +108,43 @@ R_Value * parse_r_value(vector<Token> & tokens, size_t & p)
         }
     }
     return result;
+}
+
+If_Statement * parse_if_statement(vector<Token> & tokens, size_t & p)
+{
+    If_Statement * istmt = new If_Statement;
+    if (tokens[p].token_type != TOK_IF)
+    {
+        throw_error(0, p);
+    }
+
+    inc_pointer(tokens, p);
+    if (tokens[p].token_type != TOK_L_PARAN)
+    {
+        throw_error(0, p);
+    }
+
+    inc_pointer(tokens, p);
+    istmt->condition = parse_condition(tokens, p);
+
+    inc_pointer(tokens, p);
+    if (tokens[p].token_type != TOK_R_PARAN)
+    {
+        throw_error(0, p);
+    }
+
+    inc_pointer(tokens, p);
+    if (tokens[p].token_type != TOK_L_BRACE)
+    {
+        throw_error(0, p);
+    }
+    istmt->body = parse_multi_statemnt(tokens, p);
+
+    if (tokens[p].token_type != TOK_R_BRACE)
+    {
+        throw_error(0, p);
+    }
+    return istmt;
 }
 
 Printf_Statement * parse_printf_statement(vector<Token> & tokens, size_t & p)
@@ -204,6 +269,12 @@ Statement * parse_statement(vector<Token> & tokens, size_t & p)
         Printf_Statement * pstmt = parse_printf_statement(tokens, p);
         result = pstmt;
         result->type = PRINTF;
+    }
+    else if (tokens[p].token_type == TOK_IF)
+    {
+        If_Statement * istmt = parse_if_statement(tokens, p);
+        result = istmt;
+        result->type = IF;
     }
     else if (tokens[p].token_type == TOK_INT_TYPE)
     {

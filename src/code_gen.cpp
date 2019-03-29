@@ -28,20 +28,34 @@ void gen_r_value(sstream & out, R_Value * r_value, string target)
 	if (r_value->type == INT_VAL)
 	{
 		out << "\t\tli "<< target << ", " << r_value->int_val << endl;
+		return;
 	}
+
+	if (symbol_table.find(r_value->identifier) == symbol_table.end())
+	{
+		cout << "ID: " << r_value->identifier << endl;
+		cout.flush();
+		size_t some = 0;
+		throw_error(23, some);
+	}
+
 	if (r_value->type == IDENTIFIER)
 	{
 		string location = get_var_location(out, r_value->identifier, target);
-		if (location != target)
-			out << "\t\tmove " << target << ", " << location << endl;
+		if (location.at(0) == '$')
+		{
+			if (location != target)
+				out << "\t\tmove " << target << ", " << location << endl;
+		}
+		else
+		{
+			out << "\t\tlw " << target << ", " << "0(" << target << ")" << endl;
+		}
+		
+		
 	}
 	if (r_value->type == ARRAY_IDENTIFIER)
 	{
-		if (symbol_table.find(r_value->identifier) == symbol_table.end())
-		{
-			size_t some = 0;
-			throw_error(3, some);
-		}
 		if (r_value->array_index->type == INT_VAL)
 		{
 			string location = get_var_location(out, r_value->identifier, target);
@@ -143,7 +157,11 @@ void gen_stmt_code(Statement * stmt, sstream & out, sstream & data)
         out << "\t\tla $a0, " << prompt << endl;
         out << "\t\tli $v0, 4" << endl;
         out << "\t\tsyscall" << endl << endl;
-
+    }
+	else if (stmt->type == IF)
+    {
+		If_Statement * istmt = dynamic_cast<If_Statement *>(stmt);
+		
     }
     else if (stmt->type == MULTI)
     {
@@ -212,7 +230,7 @@ string get_var_location(sstream & out, string name, string target)
 	{
 		out << "\t\tla " << target << ", " << name << endl;
 		// out << "\t\tlw " << target << ", 0(" << target << ")" << endl;
-		return target;
+		return name;
 	}
 	return name;
 }
