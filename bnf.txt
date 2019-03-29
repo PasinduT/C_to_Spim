@@ -7,10 +7,15 @@
                 <statement> ";" <statement> |
 
 <return_statement> := "return" <int_val>
-<assignment_statement> :=  <l_value> "=" <int_val> 
+<assignment_statement> :=  <l_value> "=" <r_value> 
 <printf_stmt> := "printf" "("<string>")" 
 <declare_stmt> :=   "int" <identifier> |
                     "int" <identifier> "[" <int_val> "]"
 <l_value> :=    <identifier> |
-                <identifier> "[" <int_val> "]" |
-                <identifier> "[" <identifier> "]"
+                <identifier> "[" <r_value> "]" 
+
+<r_value> :=    <int_val> |
+                <indentifier> |
+                <indentifier> "[" <r_value> "]"
+
+<if_statement> :=   <

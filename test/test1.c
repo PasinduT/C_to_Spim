@@ -2,9 +2,9 @@
 
 int main()
 {
-    int s;
-    s = 5;
-    int some[100];
-    some[s] = 5;
+    int a;
+    int b[9];
+    b[a] = b[b[a]];
+    printf("Hello world");
     return 0;
 }

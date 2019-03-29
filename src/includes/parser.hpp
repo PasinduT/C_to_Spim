@@ -13,31 +13,60 @@ enum Statement_Type
     ASSIGNMENT
 };
 
-class Return_Statement 
+enum R_Value_Type
+{
+    INT_VAL,
+    IDENTIFIER,
+    ARRAY_IDENTIFIER
+};
+
+class R_Value
+{
+public:
+    R_Value_Type type;
+    int int_val;
+    string identifier;
+    R_Value * array_index;
+};
+
+class Statement
+{
+public:
+    Statement_Type type;
+    Statement * first;
+    Statement * second;
+    Statement()
+    {
+        type = EMPTY;
+    }
+
+    virtual ~Statement() {}
+};
+
+class Return_Statement : public Statement
 {
 public:
     int int_val;
 };
 
-class Assignment_Statement 
+class Assignment_Statement : public Statement
 {
 public:
     string identifier;
-    int array_index;
-    string array_index_identifier;
+    R_Value * array_index;
     bool is_array;
-    int int_val;
+    R_Value * r_value;
 
     Assignment_Statement() {is_array = false;}
 };
 
-class Printf_Statement 
+class Printf_Statement : public Statement
 {
 public:
     string str_val;
 };
 
-class Declare_Statement 
+class Declare_Statement : public Statement
 {
 public:
     string identifier;
@@ -47,22 +76,7 @@ public:
     Declare_Statement() { is_array = false; }
 };
 
-class Statement
-{
-public:
-    Statement_Type type;
-    Return_Statement * rstmt;
-    Printf_Statement * pstmt;
-    Declare_Statement * dstmt;
-    Assignment_Statement * astmt;
-    Statement * first;
-    Statement * second;
 
-    Statement()
-    {
-        type = EMPTY;
-    }
-};
 
 class Function 
 {
@@ -83,6 +97,8 @@ public:
  * @param p the position of the initial token 
  */
 Program * parse(vector<Token> & tokens, size_t & p);
+
+R_Value * parse_r_value(vector<Token> & tokens, size_t & p);
 
 Function * parse_function(vector<Token> & tokens, size_t & p);
 

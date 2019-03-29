@@ -48,6 +48,40 @@ Return_Statement * parse_return_statement(vector<Token> & tokens, size_t & p)
     return result;
 }
 
+R_Value * parse_r_value(vector<Token> & tokens, size_t & p)
+{
+    R_Value * result = new R_Value;
+    if (tokens[p].token_type == TOK_INT)
+    {
+        result->int_val = tokens[p].int_val;
+        result->type = INT_VAL;
+        return result;
+    }
+
+    string identifier;
+    if (tokens[p].token_type != TOK_IDENTIFIER)
+    {
+        throw_error(0, p);
+    }
+    identifier = tokens[p].str_val;
+    result->identifier = identifier;
+    result->type = IDENTIFIER;
+    if ((p < tokens.size() - 1) && tokens[p+1].token_type == TOK_L_BRACKET)
+    {
+        inc_pointer(tokens, p);
+        inc_pointer(tokens, p);
+        result->type = ARRAY_IDENTIFIER;
+        result->array_index = parse_r_value(tokens, p);
+        
+        inc_pointer(tokens, p);
+        if (tokens[p].token_type != TOK_R_BRACKET)
+        {
+            throw_error(0, p);
+        }
+    }
+    return result;
+}
+
 Printf_Statement * parse_printf_statement(vector<Token> & tokens, size_t & p)
 {   
     if (tokens[p].token_type != TOK_PRINTF)
@@ -123,6 +157,7 @@ Declare_Statement * parse_declare_statement(vector<Token> & tokens, size_t & p)
 Assignment_Statement * parse_assignment_statement(vector<Token> & tokens, size_t & p)
 {
     Assignment_Statement * result = new Assignment_Statement;
+
     string identifier;
     if (tokens[p].token_type != TOK_IDENTIFIER)
     {
@@ -134,22 +169,9 @@ Assignment_Statement * parse_assignment_statement(vector<Token> & tokens, size_t
     if (tokens[p].token_type == TOK_L_BRACKET)
     {
         inc_pointer(tokens, p);
-        if (tokens[p].token_type == TOK_INT)
-        {
-            result->array_index = tokens[p].int_val;
-            result->is_array = true;
-        }
-        else if (tokens[p].token_type == TOK_IDENTIFIER)
-        {
-            result->array_index = -1;
-            result->is_array = true;
-            result->array_index_identifier = tokens[p].str_val;
-        }
-        else 
-        {
-            throw_error(0, p);
-        }
-        
+        result->array_index = parse_r_value(tokens, p);
+        result->is_array = true;
+
         inc_pointer(tokens, p);
         if (tokens[p].token_type != TOK_R_BRACKET)
         {
@@ -163,34 +185,30 @@ Assignment_Statement * parse_assignment_statement(vector<Token> & tokens, size_t
     }
 
     inc_pointer(tokens, p);
-    int int_val;
-    if (tokens[p].token_type != TOK_INT)
-    {
-        throw_error(0, p);
-    }
-    int_val = tokens[p].int_val;
-
+    result->r_value = parse_r_value(tokens, p);
     result->identifier = identifier;
-    result->int_val = int_val;
     return result;
 }
 
 Statement * parse_statement(vector<Token> & tokens, size_t & p)
 {
-    Statement * result = new Statement;
+    Statement * result;
     if (tokens[p].token_type == TOK_RETURN)
     {
-        result->rstmt = parse_return_statement(tokens, p);
+        Return_Statement * rstmt = parse_return_statement(tokens, p);
+        result = rstmt;
         result->type = RETURN;
     }
     else if (tokens[p].token_type == TOK_PRINTF)
     {
-        result->pstmt = parse_printf_statement(tokens, p);
+        Printf_Statement * pstmt = parse_printf_statement(tokens, p);
+        result = pstmt;
         result->type = PRINTF;
     }
     else if (tokens[p].token_type == TOK_INT_TYPE)
     {
-        result->dstmt = parse_declare_statement(tokens, p);
+        Declare_Statement * dstmt = parse_declare_statement(tokens, p);
+        result = dstmt;
         result->type = DECLARE;
     }
     else if (tokens[p].token_type == TOK_IDENTIFIER)
@@ -198,7 +216,8 @@ Statement * parse_statement(vector<Token> & tokens, size_t & p)
         if ((p < tokens.size() - 1) && ((tokens[p+1].token_type == TOK_EQUAL)
                 || (tokens[p+1].token_type == TOK_L_BRACKET)))
         {
-            result->astmt = parse_assignment_statement(tokens, p);
+            Assignment_Statement * astmt = parse_assignment_statement(tokens, p);
+            result = astmt;
             result->type = ASSIGNMENT;
         }
     }

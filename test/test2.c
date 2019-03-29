@@ -14,7 +14,7 @@ int main()
     int some[30];
     a = 4;
     k = 5;
-    some[a] = 12;
+    some[a] = some[some[k]];
     printf("Hello World!");
     return 0;
 }
