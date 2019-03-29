@@ -8,11 +8,13 @@ using namespace std;
 typedef stringstream sstream;
 unsigned string_prompts = 0;
 unsigned s_registers = 0;
+unsigned exits = 0;
 unordered_map<string, pair<int, string> > symbol_table;
 
 void gen_stmt_code(Statement * stmt, sstream & out, sstream & data);
 void gen_code(Program * program, sstream & code, sstream & data);
 void gen_code_assignment(Assignment_Statement * astmt, sstream & out, sstream & data);
+void gen_code_condition(Condition cond, sstream & out, sstream & data, string target);
 void gen_data(sstream & out, string name, string & data);
 void gen_data(sstream & out, string name, int data);
 string get_var_location(sstream & out, string name, string target);
@@ -75,6 +77,28 @@ void gen_r_value(sstream & out, R_Value * r_value, string target)
 			out << "\t\tadd " << target << ", " << other << ", " << location << endl;
 			out << "\t\tlw " << target << ", 0(" << target << ")" << endl;
 		}
+	}
+}
+
+void gen_code_condition(Condition * cond, sstream & out, sstream & data, string target)
+{
+	if (cond->type == LESS)
+	{
+		gen_r_value(out, cond->first, "$t1");
+		gen_r_value(out, cond->second, "$t0");
+		out << "\t\tslt " << target << ", " << "$t1" << ", " << "$t0" << endl;
+	}
+	else if (cond->type == GREATER)
+	{
+		gen_r_value(out, cond->first, "$t1");
+		gen_r_value(out, cond->second, "$t0");
+		out << "\t\tslt " << target << ", " << "$t0" << ", " << "$t1" << endl;
+	}
+	else if (cond->type == EQUAL)
+	{
+		gen_r_value(out, cond->first, "$t1");
+		gen_r_value(out, cond->second, "$t0");
+		out << "\t\tbne " << "$t0" << ", " << "$t1, " << target << endl;
 	}
 }
 
@@ -161,7 +185,18 @@ void gen_stmt_code(Statement * stmt, sstream & out, sstream & data)
 	else if (stmt->type == IF)
     {
 		If_Statement * istmt = dynamic_cast<If_Statement *>(stmt);
-		
+		string exit_point = "EXIT" + to_string(exits++);
+		if (istmt->condition->type == EQUAL)
+		{
+			gen_code_condition(istmt->condition, out, data, exit_point);
+		}
+		else 
+		{
+			gen_code_condition(istmt->condition, out, data, "$t1");
+			out << "\t\tbeq " << "$t1, " << "$zero, " << exit_point << endl << endl;
+		}
+		gen_stmt_code(istmt->body, out, data);
+		out << exit_point << ":" << endl;
     }
     else if (stmt->type == MULTI)
     {

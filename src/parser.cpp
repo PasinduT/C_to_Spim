@@ -62,7 +62,8 @@ Condition * parse_condition(vector<Token> & tokens, size_t & p)
     {
         result->type = GREATER;
     }
-    else if (tokens[p].token_type == EQUAL && ((p < (tokens.size() - 1)) && tokens[p+1].token_type == EQUAL))
+    else if (tokens[p].token_type == TOK_EQUAL && 
+                ((p < (tokens.size() - 1)) && tokens[p+1].token_type == TOK_EQUAL))
     {
         inc_pointer(tokens, p);
         result->type = EQUAL;
@@ -74,6 +75,7 @@ Condition * parse_condition(vector<Token> & tokens, size_t & p)
     inc_pointer(tokens, p);
 
     result->second = parse_r_value(tokens, p);
+    return result;
 }
 
 R_Value * parse_r_value(vector<Token> & tokens, size_t & p)
@@ -110,42 +112,7 @@ R_Value * parse_r_value(vector<Token> & tokens, size_t & p)
     return result;
 }
 
-If_Statement * parse_if_statement(vector<Token> & tokens, size_t & p)
-{
-    If_Statement * istmt = new If_Statement;
-    if (tokens[p].token_type != TOK_IF)
-    {
-        throw_error(0, p);
-    }
 
-    inc_pointer(tokens, p);
-    if (tokens[p].token_type != TOK_L_PARAN)
-    {
-        throw_error(0, p);
-    }
-
-    inc_pointer(tokens, p);
-    istmt->condition = parse_condition(tokens, p);
-
-    inc_pointer(tokens, p);
-    if (tokens[p].token_type != TOK_R_PARAN)
-    {
-        throw_error(0, p);
-    }
-
-    inc_pointer(tokens, p);
-    if (tokens[p].token_type != TOK_L_BRACE)
-    {
-        throw_error(0, p);
-    }
-    istmt->body = parse_multi_statemnt(tokens, p);
-
-    if (tokens[p].token_type != TOK_R_BRACE)
-    {
-        throw_error(0, p);
-    }
-    return istmt;
-}
 
 Printf_Statement * parse_printf_statement(vector<Token> & tokens, size_t & p)
 {   
@@ -275,6 +242,7 @@ Statement * parse_statement(vector<Token> & tokens, size_t & p)
         If_Statement * istmt = parse_if_statement(tokens, p);
         result = istmt;
         result->type = IF;
+        return result;
     }
     else if (tokens[p].token_type == TOK_INT_TYPE)
     {
@@ -328,6 +296,44 @@ Statement * parse_multi_statemnt(vector<Token> & tokens, size_t & p)
         inc_pointer(tokens, p);
     }
     return result;
+}
+
+If_Statement * parse_if_statement(vector<Token> & tokens, size_t & p)
+{
+    If_Statement * istmt = new If_Statement;
+    if (tokens[p].token_type != TOK_IF)
+    {
+        throw_error(0, p);
+    }
+
+    inc_pointer(tokens, p);
+    if (tokens[p].token_type != TOK_L_PARAN)
+    {
+        throw_error(0, p);
+    }
+
+    inc_pointer(tokens, p);
+    istmt->condition = parse_condition(tokens, p);
+
+    inc_pointer(tokens, p);
+    if (tokens[p].token_type != TOK_R_PARAN)
+    {
+        throw_error(0, p);
+    }
+
+    inc_pointer(tokens, p);
+    if (tokens[p].token_type != TOK_L_BRACE)
+    {
+        throw_error(0, p);
+    }
+    inc_pointer(tokens, p);
+    istmt->body = parse_multi_statemnt(tokens, p);
+
+    if (tokens[p].token_type != TOK_R_BRACE)
+    {
+        throw_error(0, p);
+    }
+    return istmt;
 }
 
 Function * parse_function(vector<Token> & tokens, size_t & p)
