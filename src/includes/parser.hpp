@@ -95,8 +95,10 @@ public:
 class If_Statement : public Statement
 {
 public:
+    bool has_else = false;
     Condition * condition;
     Statement * body;
+    Statement * else_body;
 };
 
 

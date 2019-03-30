@@ -24,7 +24,8 @@ enum TOKENS
     TOK_EQUAL,
     TOK_L_BRACKET, 
     TOK_R_BRACKET,
-    TOK_IF
+    TOK_IF,
+    TOK_ELSE
 };
 
 const string TOKEN_STRINGS[] =
@@ -47,7 +48,8 @@ const string TOKEN_STRINGS[] =
     "TOK_EQUAL",
     "TOK_L_BRACKET", 
     "TOK_R_BRACKET",
-    "TOK_IF"
+    "TOK_IF",
+    "TOK_ELSE"
 };
 
 

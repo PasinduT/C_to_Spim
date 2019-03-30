@@ -9,6 +9,7 @@ typedef stringstream sstream;
 unsigned string_prompts = 0;
 unsigned s_registers = 0;
 unsigned exits = 0;
+unsigned elses = 0;
 unordered_map<string, pair<int, string> > symbol_table;
 
 void gen_stmt_code(Statement * stmt, sstream & out, sstream & data);
@@ -186,16 +187,23 @@ void gen_stmt_code(Statement * stmt, sstream & out, sstream & data)
     {
 		If_Statement * istmt = dynamic_cast<If_Statement *>(stmt);
 		string exit_point = "EXIT" + to_string(exits++);
+		string branch_point = (istmt->has_else ? "ELSE" + to_string(elses++) : exit_point);
 		if (istmt->condition->type == EQUAL)
 		{
-			gen_code_condition(istmt->condition, out, data, exit_point);
+			gen_code_condition(istmt->condition, out, data, branch_point);
 		}
 		else 
 		{
 			gen_code_condition(istmt->condition, out, data, "$t1");
-			out << "\t\tbeq " << "$t1, " << "$zero, " << exit_point << endl << endl;
+			out << "\t\tbeq " << "$t1, " << "$zero, " << branch_point << endl << endl;
 		}
 		gen_stmt_code(istmt->body, out, data);
+		if (istmt->has_else)
+		{
+			out << "\t\tj " << exit_point << endl;
+			out << branch_point << ":" << endl;
+			gen_stmt_code(istmt->else_body, out, data);
+		}
 		out << exit_point << ":" << endl;
     }
     else if (stmt->type == MULTI)

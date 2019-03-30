@@ -59,6 +59,10 @@ void lex(ifstream & input, vector<Token> & tokens)
             {
                 token.token_type = TOK_IF;
             }
+            else if (iden == "else")
+            {
+                token.token_type = TOK_ELSE;
+            }
             else
             {
                 token.token_type = TOK_IDENTIFIER;

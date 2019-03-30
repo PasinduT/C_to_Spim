@@ -9,7 +9,10 @@
 <return_statement> := "return" <int_val>
 <assignment_statement> :=  <l_value> "=" <r_value> 
 <printf_stmt> := "printf" "("<string>")" 
-<if_statement> :=  "if" "(" <condition> ")" "{" <statement> "}"
+<if_statement> :=   "if" "(" <condition> ")" "{" <statement> "}" |
+                    "if" "(" <condition> ")" "{" <statement> "}" <else_clause>
+<else_clause> :=    "else" "{" <statement> "}" |
+                    "else" <if_statement> 
 <declare_stmt> :=   "int" <identifier> |
                     "int" <identifier> "[" <int_val> "]"
 <l_value> :=    <identifier> |
@@ -17,7 +20,8 @@
 
 <r_value> :=    <int_val> |
                 <indentifier> |
-                <indentifier> "[" <r_value> "]"
+                <indentifier> "[" <r_value> "]" |
+                <r_value> <binary_operator> <r_value>
 
 <condition> :=  <r_value> <logical_operator> <r_value>
 <logical_operator> := "<" | ">" | "=="

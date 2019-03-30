@@ -301,6 +301,7 @@ Statement * parse_multi_statemnt(vector<Token> & tokens, size_t & p)
 If_Statement * parse_if_statement(vector<Token> & tokens, size_t & p)
 {
     If_Statement * istmt = new If_Statement;
+    istmt->type = IF;
     if (tokens[p].token_type != TOK_IF)
     {
         throw_error(0, p);
@@ -332,6 +333,30 @@ If_Statement * parse_if_statement(vector<Token> & tokens, size_t & p)
     if (tokens[p].token_type != TOK_R_BRACE)
     {
         throw_error(0, p);
+    }
+
+    if ((p < tokens.size() - 1) && tokens[p + 1].token_type == TOK_ELSE)
+    {
+        istmt->has_else = true;
+        inc_pointer(tokens, p);
+        inc_pointer(tokens, p);
+        if (tokens[p].token_type == TOK_IF)
+        {
+            istmt->else_body = parse_if_statement(tokens, p);
+        }
+        else
+        {
+            if (tokens[p].token_type != TOK_L_BRACE)
+            {
+                throw_error(0, p);
+            }
+            inc_pointer(tokens, p);
+            istmt->else_body = parse_multi_statemnt(tokens, p);
+            if (tokens[p].token_type != TOK_R_BRACE)
+            {
+                throw_error(0, p);
+            }
+        }
     }
     return istmt;
 }
