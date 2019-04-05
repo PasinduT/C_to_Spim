@@ -6,6 +6,7 @@ using namespace std;
 
 enum TOKENS
 {
+    TOK_NOTHING,
     TOK_INT,
     TOK_IDENTIFIER,
     TOK_INT_TYPE,
@@ -25,11 +26,16 @@ enum TOKENS
     TOK_L_BRACKET, 
     TOK_R_BRACKET,
     TOK_IF,
-    TOK_ELSE
+    TOK_ELSE,
+    TOK_ASTERISK,
+    TOK_FORWARD_SLASH,
+    TOK_PLUS,
+    TOK_MINUS
 };
 
 const string TOKEN_STRINGS[] =
 {
+    "TOK_NOTHING",
     "TOK_INT",
     "TOK_IDENTIFIER",
     "TOK_INT_TYPE",
@@ -49,7 +55,11 @@ const string TOKEN_STRINGS[] =
     "TOK_L_BRACKET", 
     "TOK_R_BRACKET",
     "TOK_IF",
-    "TOK_ELSE"
+    "TOK_ELSE",
+    "TOK_ASTERISK",
+    "TOK_FORWARD_SLASH",
+    "TOK_PLUS",
+    "TOK_MINUS"
 };
 
 

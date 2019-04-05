@@ -117,6 +117,18 @@ void lex(ifstream & input, vector<Token> & tokens)
 
                 case '>':  token.token_type = TOK_R_ANGLE;
                             break;
+                        
+                case '+':  token.token_type = TOK_PLUS;
+                            break;
+
+                case '-':  token.token_type = TOK_MINUS;
+                            break;
+                
+                case '*':  token.token_type = TOK_ASTERISK;
+                            break;
+
+                case '/':  token.token_type = TOK_FORWARD_SLASH;
+                            break;
             }
             tokens.push_back(token);
             input.get(c);

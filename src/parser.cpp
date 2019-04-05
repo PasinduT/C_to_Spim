@@ -7,7 +7,7 @@ Program * parse(vector<Token> & tokens, size_t & p)
 {
     for (int i = 0; i < tokens.size(); i++)
     {
-        cout << i << " - ";
+        cout << i << " - " << tokens[p].str_val;
         tokens[i].print();
     }
 
@@ -25,6 +25,15 @@ void inc_pointer(vector<Token> & tokens, size_t & p)
     {
         throw_error(1, p);
     }
+}
+
+TOKENS peek(vector<Token> & tokens, size_t & p)
+{
+    if (p == tokens.size())
+    {
+        return TOK_NOTHING;
+    }
+    return tokens[p+1].token_type;
 }
 
 Return_Statement * parse_return_statement(vector<Token> & tokens, size_t & p)
@@ -78,9 +87,70 @@ Condition * parse_condition(vector<Token> & tokens, size_t & p)
     return result;
 }
 
+Term * parse_term(vector<Token> & tokens, size_t & p)
+{
+    Term * result = new Term;
+    result->first = parse_factor(tokens, p);
+    if (p < tokens.size() - 1)
+    {
+        if (tokens[p + 1].token_type == TOK_ASTERISK)
+        {
+            result->type = MULTIPLY;
+            inc_pointer(tokens, p);
+            inc_pointer(tokens, p);
+            result->second = parse_factor(tokens, p);
+        }
+        else if (tokens[p + 1].token_type == TOK_FORWARD_SLASH)
+        {
+            result->type = DIVIDE;
+            inc_pointer(tokens, p);
+            inc_pointer(tokens, p);
+            result->second = parse_factor(tokens, p);
+        }
+    }
+    return result;
+}
+
 R_Value * parse_r_value(vector<Token> & tokens, size_t & p)
 {
     R_Value * result = new R_Value;
+    result->first = parse_term(tokens, p);
+    result->type = NONE;
+    R_Value * current = result;
+    while (peek(tokens, p) == TOK_PLUS || peek(tokens, p) == TOK_MINUS)
+    {
+        inc_pointer(tokens, p);
+        Binary_Operator_Type bin_op = PLUS;
+        if (tokens[p].token_type == TOK_MINUS)
+        {
+            bin_op = MINUS;
+        }
+        
+        inc_pointer(tokens, p);
+        if (current->type == NONE)
+        {
+            current->type = bin_op;
+            current->second = parse_term(tokens, p);
+        }
+        else
+        {
+            result = new R_Value;
+            result->type = MULTIPLE_MINUS;
+            if (bin_op == PLUS)
+            {
+                result->type = MULTIPLE_PLUS;
+            }
+            result->left = current;
+            result->second = parse_term(tokens, p);
+            current = result;
+        }
+    }
+    return result;
+}
+
+Factor * parse_factor(vector<Token> & tokens, size_t & p)
+{
+    Factor * result = new Factor;
     if (tokens[p].token_type == TOK_INT)
     {
         result->int_val = tokens[p].int_val;

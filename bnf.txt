@@ -18,10 +18,13 @@
 <l_value> :=    <identifier> |
                 <identifier> "[" <r_value> "]" 
 
-<r_value> :=    <int_val> |
-                <indentifier> |
-                <indentifier> "[" <r_value> "]" |
-                <r_value> <binary_operator> <r_value>
+<factor> := <int_val> |
+            <indentifier> |
+            <indentifier> "[" <r_value> "]" 
+        
+<term> :=   <factor> { "*" | "/" } <factor> | <factor>
+
+<r_value> := <term> { "+" | "-" } <term>
 
 <condition> :=  <r_value> <logical_operator> <r_value>
 <logical_operator> := "<" | ">" | "=="

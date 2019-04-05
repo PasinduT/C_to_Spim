@@ -3,8 +3,7 @@
 int main()
 {
     int a;
-    int b[9];
-    b[a] = b[b[a]];
-    printf("Hello world");
+    a = a + 1;
+    a = 1 + a + 3 + a - a;
     return 0;
 }

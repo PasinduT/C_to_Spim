@@ -20,31 +20,139 @@ void gen_data(sstream & out, string name, string & data);
 void gen_data(sstream & out, string name, int data);
 string get_var_location(sstream & out, string name, string target);
 void gen_r_value(sstream & out, R_Value * r_value, string target);
+void gen_term(sstream & out, Term * term, string target);
+void gen_factor(sstream & out, Factor * factor, string target);
 void gen_data_array(sstream & out, string name, int n);
 void gen_output(Program * program, ostream & out);
 
 /**
- * Get the r value into a register. If it is an array it destroys the $t0 register
+ * Get the value of r_value into a register. 
+ * It destroys the 
+ * - $t0 register if the target is not the $t0 register
+ * - $t8 register otherwise
  */
 void gen_r_value(sstream & out, R_Value * r_value, string target)
 {
-	if (r_value->type == INT_VAL)
+	string other = "$t0";
+	if (r_value->type == NONE)
 	{
-		out << "\t\tli "<< target << ", " << r_value->int_val << endl;
+		gen_term(out, r_value->first, target);
+		return;
+	}
+	if (other == target)
+	{
+		other = "$t8";
+		if (r_value->type == PLUS)
+		{
+			gen_term(out, r_value->second, other);
+			gen_term(out, r_value->first, target);
+			out << "\t\tadd " << target << ", " << target << ", " << other << endl;
+			out << endl;
+		}
+		else if (r_value->type == MINUS)
+		{
+			gen_term(out, r_value->second, other);
+			gen_term(out, r_value->first, target);
+			out << "\t\tsub " << target << ", " << target << ", " << other << endl;
+			out << endl;
+		}
+		else if (r_value->type == MULTIPLE_PLUS)
+		{
+			gen_r_value(out, r_value->left, other);
+			gen_term(out, r_value->second, target);
+			out << "\t\tadd " << target << ", " << target << ", " << other << endl;
+			out << endl;
+		}
+		else if (r_value->type == MULTIPLE_MINUS)
+		{
+			gen_r_value(out, r_value->left, other);
+			gen_term(out, r_value->second, target);
+			out << "\t\tsub " << target << ", " << target << ", " << other << endl;
+			out << endl;
+		}
+	}
+	else 
+	{
+		if (r_value->type == PLUS)
+		{
+			gen_term(out, r_value->first, target);
+			gen_term(out, r_value->second, other);
+			out << "\t\tadd " << target << ", " << target << ", " << other << endl;
+			out << endl;
+		}
+		else if (r_value->type == MINUS)
+		{
+			gen_term(out, r_value->first, target);
+			gen_term(out, r_value->second, other);
+			out << "\t\tsub " << target << ", " << target << ", " << other << endl;
+			out << endl;
+		}
+		else if (r_value->type == MULTIPLE_PLUS)
+		{
+			gen_r_value(out, r_value->left, other);
+			gen_term(out, r_value->second, target);
+			out << "\t\tadd " << target << ", " << target << ", " << other << endl;
+			out << endl;
+		}
+		else if (r_value->type == MULTIPLE_MINUS)
+		{
+			gen_r_value(out, r_value->left, other);
+			gen_term(out, r_value->second, target);
+			out << "\t\tsub " << target << ", " << target << ", " << other << endl;
+			out << endl;
+		}
+	}
+}
+
+/**
+ * Get the value of r_value into a register. 
+ * It destroys the 
+ * - $t0 register if the target is not the $t0 register
+ * - $t8 register otherwise
+ */
+void gen_term(sstream & out, Term * term, string target)
+{
+	if (term->type == NONE)
+	{
+		gen_factor(out, term->first, target);
+		return;
+	}
+	/* TODO: Implement the multiplication and division parts
+	string other = "$t0";
+	if (target == other)
+	{
+		other = "$t8";
+		gen_factor(out, term->first, other);
+		gen_factor(out, term->second, other);
+	}
+	*/
+}
+
+/**
+ * Get the value of factor into a register. 
+ * If it is an array it destroys the 
+ * - $t0 register if the target is not the $t0 register
+ * - $t9 register otherwise
+ */
+void gen_factor(sstream & out, Factor * factor, string target)
+{
+	if (factor->type == INT_VAL)
+	{
+		out << "\t\tli "<< target << ", " << factor->int_val << endl;
 		return;
 	}
 
-	if (symbol_table.find(r_value->identifier) == symbol_table.end())
+	if (symbol_table.find(factor->identifier) == symbol_table.end())
 	{
-		cout << "ID: " << r_value->identifier << endl;
+		cout << "ID: " << factor->identifier << endl;
 		cout.flush();
 		size_t some = 0;
 		throw_error(23, some);
 	}
 
-	if (r_value->type == IDENTIFIER)
+	if (factor->type == IDENTIFIER)
 	{
-		string location = get_var_location(out, r_value->identifier, target);
+		string location = get_var_location(out, factor->identifier, target);
 		if (location.at(0) == '$')
 		{
 			if (location != target)
@@ -54,30 +162,19 @@ void gen_r_value(sstream & out, R_Value * r_value, string target)
 		{
 			out << "\t\tlw " << target << ", " << "0(" << target << ")" << endl;
 		}
-		
-		
 	}
-	if (r_value->type == ARRAY_IDENTIFIER)
+	if (factor->type == ARRAY_IDENTIFIER)
 	{
-		if (r_value->array_index->type == INT_VAL)
+		string other = "$t0";
+		if (other == target)
 		{
-			string location = get_var_location(out, r_value->identifier, target);
-			out << "\t\tlw " << target << ", " << r_value->array_index->int_val 
-				<<  "(" << location << ")" << endl;
+			other = "$t9";
 		}
-		else 
-		{
-			string other = "$t0";
-			if (other == target)
-			{
-				other = "$t9";
-			}
-			gen_r_value(out, r_value->array_index, other);
-			out << "\t\tsll "<< other << ", " << other << ", 2" << endl;
-			string location = get_var_location(out, r_value->identifier, target);
-			out << "\t\tadd " << target << ", " << other << ", " << location << endl;
-			out << "\t\tlw " << target << ", 0(" << target << ")" << endl;
-		}
+		gen_r_value(out, factor->array_index, other);
+		out << "\t\tsll "<< other << ", " << other << ", 2" << endl;
+		string location = get_var_location(out, factor->identifier, target);
+		out << "\t\tadd " << target << ", " << other << ", " << location << endl;
+		out << "\t\tlw " << target << ", 0(" << target << ")" << endl;
 	}
 }
 
@@ -131,36 +228,21 @@ void gen_code_assignment(Assignment_Statement * astmt, sstream & out, sstream & 
 		if (location.at(0) == '$')
 		{
 			gen_r_value(out, astmt->r_value, "$t1");
-			if (astmt->array_index->type == INT_VAL)
-			{
-				out << "\t\tsw $t1, " << astmt->array_index->int_val << "(" 
-					<< location << ")" << endl << endl;
-			}
-			else
-			{
-				gen_r_value(out, astmt->array_index, "$t0");
+			gen_r_value(out, astmt->array_index, "$t0");
 
-				out << "\t\tsll $t0, $t0, 2" << endl;
-				out << "\t\tadd $t0, $t0, " << location << endl;
-				out << "\t\tsw $t1, 0($t0)" << endl << endl;
-			}
+			out << "\t\tsll $t0, $t0, 2" << endl;
+			out << "\t\tadd $t0, $t0, " << location << endl;
+			out << "\t\tsw $t1, 0($t0)" << endl << endl;
 		}
 		else 
 		{
 			gen_r_value(out, astmt->r_value, "$t1");
-			if (astmt->array_index->type == INT_VAL)
-			{
-				out << "\t\tla $t0, " << location << endl;
-				out << "\t\tsw $t1, " << astmt->array_index->int_val << "($t0)" << endl << endl;
-			}
-			else 
-			{
-				gen_r_value(out, astmt->array_index, "$t0");
-				out << "\t\tla $t2, " << location << endl;
-				out << "\t\tsll $t0, $t0, 2" << endl;
-				out << "\t\tadd $t0, $t0, $t2" << endl;
-				out << "\t\tsw $t1, 0($t0)" << endl << endl;
-			}
+			gen_r_value(out, astmt->array_index, "$t0");
+			
+			out << "\t\tla $t2, " << location << endl;
+			out << "\t\tsll $t0, $t0, 2" << endl;
+			out << "\t\tadd $t0, $t0, $t2" << endl;
+			out << "\t\tsw $t1, 0($t0)" << endl << endl;
 		}
 	}
 }

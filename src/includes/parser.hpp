@@ -14,7 +14,7 @@ enum Statement_Type
     IF
 };
 
-enum R_Value_Type
+enum Factor_Type
 {
     INT_VAL,
     IDENTIFIER,
@@ -28,10 +28,40 @@ enum Logical_Operator_Type
     EQUAL
 };
 
-class R_Value
+enum Binary_Operator_Type
+{
+    NONE,
+    PLUS,
+    MINUS,
+    MULTIPLY,
+    MULTIPLE_PLUS,
+    MULTIPLE_MINUS,
+    DIVIDE
+};
+
+class Factor;
+
+class Term
 {
 public:
-    R_Value_Type type;
+    Binary_Operator_Type type = NONE;
+    Factor * first;
+    Factor * second;
+};
+
+class R_Value 
+{
+public:
+    Binary_Operator_Type type = NONE;
+    R_Value * left;
+    Term * first;
+    Term * second;
+};
+
+class Factor
+{
+public:
+    Factor_Type type;
     int int_val;
     string identifier;
     R_Value * array_index;
@@ -121,6 +151,10 @@ public:
  * @param p the position of the initial token 
  */
 Program * parse(vector<Token> & tokens, size_t & p);
+
+Token * parse_token(vector<Token> & tokens, size_t & p);
+
+Factor * parse_factor(vector<Token> & tokens, size_t & p);
 
 R_Value * parse_r_value(vector<Token> & tokens, size_t & p);
 
